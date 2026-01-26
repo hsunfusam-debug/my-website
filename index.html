@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>得獎查詢 - 富士軟片旺年會</title>
+    <style>
+        :root {
+            --fuji-red: #d32f2f;
+            --fuji-dark: #1a1a1a;
+            --gold: #ffd700;
+            --metallic-gold: linear-gradient(135deg, #fff7ad 0%, #ffa700 50%, #8b6914 100%);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body { 
+            background: var(--fuji-dark); 
+            color: white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+            margin: 0; padding: 0; min-height: 100vh;
+            background-image: radial-gradient(circle at top, #4a0000 0%, #1a1a1a 100%);
+        }
+
+        .header {
+            padding: 25px 15px; text-align: center;
+            background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,215,0,0.3);
+        }
+
+        h2 { 
+            margin: 0; font-size: 1.5rem; letter-spacing: 2px;
+            background: var(--metallic-gold); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+
+        .main-content { padding: 15px; max-width: 500px; margin: 0 auto; }
+
+        /* 查詢區塊 */
+        .query-card {
+            background: rgba(255,255,255,0.05); border-radius: 15px; padding: 20px;
+            border: 1px solid rgba(255,215,0,0.2); margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .input-group { display: flex; gap: 10px; flex-direction: column; }
+
+        input {
+            width: 100%; padding: 15px; font-size: 1.1rem; border-radius: 10px;
+            border: 1px solid #444; background: #000; color: #fff;
+            text-align: center; outline: none;
+        }
+
+        input:focus { border-color: var(--gold); box-shadow: 0 0 10px rgba(255,215,0,0.2); }
+
+        button {
+            width: 100%; padding: 15px; font-size: 1.1rem; font-weight: bold;
+            background: var(--metallic-gold); border: none; border-radius: 10px; 
+            cursor: pointer; color: #221100; transition: 0.2s;
+        }
+
+        button:disabled { opacity: 0.5; filter: grayscale(1); cursor: not-allowed; }
+
+        /* 結果顯示 */
+        #result-container { margin-top: 15px; min-height: 60px; }
+        .win-msg {
+            background: linear-gradient(45deg, #ffd700, #ff8c00); color: #000;
+            padding: 15px; border-radius: 10px; font-weight: 800;
+            text-align: center; animation: bounceIn 0.5s ease;
+            box-shadow: 0 0 20px rgba(255,215,0,0.4);
+        }
+        .lose-msg { color: #EBF5DF; text-align: center; font-size: 1.05rem; }
+
+        .prize-highlight {
+            color: #d32f2f;
+            font-size: 1.4rem;
+            font-weight: 900;
+            display: inline-block;
+            padding: 0 4px;
+            text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
+        }
+
+        /* 獎項進度清單 */
+        .status-section { margin-top: 30px; }
+        .section-title { 
+            font-size: 0.9rem; color: var(--gold); margin-bottom: 10px; 
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .grid-container {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+        }
+        .prize-item {
+            background: rgba(255,255,255,0.03); border-radius: 8px; padding: 10px;
+            border-left: 3px solid #444; display: flex; flex-direction: column;
+        }
+        .prize-item.active { border-left-color: #d32f2f; background: rgba(211,47,47,0.1); }
+        .prize-item.done { border-left-color: #ffd700; background: rgba(255,215,0,0.05); opacity: 0.7; }
+
+        .p-name { font-size: 0.8rem; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .p-count { font-size: 1rem; font-weight: bold; color: #fff; margin-top: 2px; }
+        
+        /* 重新整理冷卻提示樣式 */
+        #cooldown-msg {
+            font-size: 0.7rem;
+            color: #ff8888;
+            margin-top: 5px;
+            display: none;
+            text-align: right;
+        }
+
+        .loading-dots:after { content: ' .'; animation: dots 1s steps(5, end) infinite; }
+        @keyframes dots { 0%, 20% { color: rgba(0,0,0,0); text-shadow: .5em 0 0 rgba(0,0,0,0), 1em 0 0 rgba(0,0,0,0); } 40% { color: white; text-shadow: .5em 0 0 rgba(0,0,0,0), 1em 0 0 rgba(0,0,0,0); } 60% { text-shadow: .5em 0 0 white, 1em 0 0 rgba(0,0,0,0); } 80%, 100% { text-shadow: .5em 0 0 white, 1em 0 0 white; } }
+        @keyframes bounceIn { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1); opacity: 1; } }
+        
+        .footer { text-align: center; color: #444; font-size: 0.7rem; margin: 40px 0 20px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h2>2026 FUJIFILM<br>旺年會得獎查詢</h2>
+</div>
+
+<div class="main-content">
+    <div class="query-card">
+        <div class="input-group">
+            <input type="text" id="staffId" placeholder="輸入您的職編 (如: XXXXX)" autocomplete="off">
+            <button id="queryBtn" onclick="handleQuery()">立即查詢</button>
+        </div>
+        <div id="result-container"></div>
+    </div>
+
+    <div class="status-section">
+        <div class="section-title">
+            <span>🏆 各獎項進度</span>
+            <div>
+                <span id="refresh-time" style="font-size: 0.7rem; color: #666;">載入中...</span>
+                <div id="cooldown-msg">頻繁重新整理，等待30秒後再重新整理</div>
+            </div>
+        </div>
+        <div id="status-grid" class="grid-container">
+            <!-- 動態插入 -->
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    &copy; 2026 Fujifilm Taiwan. All Rights Reserved.
+</div>
+
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbxa1wlocSHcu20TPPpsSrSI24XG3_TCq2ndKFOhVmdut2ns94fMfFdGcf1MdKdCzYHVzQ/exec";
+    
+    // 設定重新整理的冷卻時間 (毫秒)，例如 15 秒
+    const REFRESH_COOLDOWN = 15000; 
+    const QUERY_COOLDOWN = 10000;
+
+    window.onload = () => {
+        // 頁面載入時僅執行一次讀取
+        loadStatus();
+        // 移除原有的 setInterval 自動刷新邏輯
+    };
+
+// 1. 在 script 開頭定義延遲函數
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    async function loadStatus() {
+        const grid = document.getElementById('status-grid');
+        const refreshText = document.getElementById('refresh-time');
+        const cooldownMsg = document.getElementById('cooldown-msg');
+        
+        const now = Date.now();
+        const cachedData = localStorage.getItem('fuji_prize_cache');
+        const cachedTs = localStorage.getItem('fuji_prize_ts');
+
+        // 檢查快取冷卻
+        if (cachedData && cachedTs && (now - parseInt(cachedTs) < REFRESH_COOLDOWN)) {
+            renderStatus(JSON.parse(cachedData));
+            refreshText.innerText = "最後更新：" + new Date(parseInt(cachedTs)).toLocaleTimeString();
+            cooldownMsg.style.display = "block";
+            return;
+        }
+
+        try {
+            cooldownMsg.style.display = "none";
+            
+            // 生成隨機延遲 (0 到 5 秒)
+            const randomDelayMs = Math.floor(Math.random() * 3000); 
+            let remainingSeconds = Math.ceil(randomDelayMs / 1000); // 無條件進位成秒數
+            
+            // --- 修改後的倒數計時邏輯 ---
+            while (remainingSeconds > 0) {
+                refreshText.innerText = `連線排隊中... (${remainingSeconds}s)`;
+                await sleep(1000); // 每次等待 1 秒
+                remainingSeconds--;
+            }
+            
+            // 倒數結束，開始抓取資料
+            refreshText.innerText = "正在取得最新資料...";
+            const res = await fetch(`${API_URL}?action=prizes&t=${Date.now()}`);
+            const prizes = await res.json();
+            
+            localStorage.setItem('fuji_prize_cache', JSON.stringify(prizes));
+            localStorage.setItem('fuji_prize_ts', Date.now().toString());
+            
+            renderStatus(prizes);
+            refreshText.innerText = "最後更新：" + new Date().toLocaleTimeString();
+        } catch (e) {
+            console.error("Fetch Error", e);
+            if (cachedData) {
+                renderStatus(JSON.parse(cachedData));
+                refreshText.innerText = "連線不穩 (顯示舊資料)";
+            } else {
+                refreshText.innerText = "無法連線至伺服器";
+            }
+        }
+    }
+
+    function renderStatus(prizesFromCloud) {
+        const grid = document.getElementById('status-grid');
+        if (!prizesFromCloud || prizesFromCloud.length === 0) {
+            grid.innerHTML = "<div style='color:#666; text-align:center; grid-column: 1/-1;'>尚未有獎項資訊</div>";
+            return;
+        }
+
+        grid.innerHTML = prizesFromCloud.map(p => {
+            let statusClass = "";
+            let progressText = "";
+            
+            if (p.current >= p.total) {
+                statusClass = "done";
+                progressText = `已全部抽出 (${p.total})`;
+            } else if (p.current > 0) {
+                statusClass = "active";
+                progressText = `已抽 ${p.current} / 共 ${p.total}`;
+            } else {
+                statusClass = "";
+                progressText = `待抽 (共 ${p.total} 名)`;
+            }
+
+            return `
+                <div class="prize-item ${statusClass}">
+                    <div class="p-name">${p.name}</div>
+                    <div style="font-size: 0.7rem; color: #aaa;">抽獎人：${p.drawer}</div>
+                    <div class="p-count">${progressText}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    async function handleQuery() {
+        const input = document.getElementById('staffId');
+        const btn = document.getElementById('queryBtn');
+        const resDiv = document.getElementById('result-container');
+        const id = input.value.trim().toUpperCase();
+
+        if (!id) return;
+        if (btn.disabled) return;
+
+        btn.disabled = true;
+        resDiv.innerHTML = '<div class="lose-msg loading-dots">正在連線至雲端</div>';
+
+        try {
+            // 個人查詢不受頁面冷卻限制，但有按鈕冷卻限制
+            const res = await fetch(`${API_URL}?id=${id}&_t=${Date.now()}`);
+            const data = await res.json();
+
+            if (data && data.length > 0) {
+                resDiv.innerHTML = data.map(item => `
+                    <div class="win-msg">
+                        恭喜 ${item.name}！<br>
+                        🎊 獲得：<span class="prize-highlight">${item.prizeName}</span> 🎊<br>
+                        <span style="font-size:0.8rem; font-weight:normal;">※請攜帶職工卡至領獎處領獎</span>
+                    </div>
+                `).join('');
+            } else {
+                resDiv.innerHTML = `<div class="lose-msg"> "${id}" 尚未中獎<br>請等候下一輪抽獎</div>`;
+            }
+        } catch (e) {
+            resDiv.innerHTML = '<div class="lose-msg" style="color:#ff4444;">系統繁忙，請稍後再試</div>';
+        }
+
+        // 個人查詢按鈕冷卻
+        let count = QUERY_COOLDOWN / 1000;
+        const timer = setInterval(() => {
+            count--;
+            if (count <= 0) {
+                clearInterval(timer);
+                btn.disabled = false;
+                btn.innerText = "立即查詢";
+            } else {
+                btn.innerText = `請等候 (${count}s)`;
+            }
+        }, 1000);
+    }
+</script>
+
+</body>
+</html>
