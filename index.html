@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>得獎查詢 - 富士軟片旺年會</title>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root {
             --fuji-red: #d32f2f;
@@ -147,7 +148,7 @@
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxa1wlocSHcu20TPPpsSrSI24XG3_TCq2ndKFOhVmdut2ns94fMfFdGcf1MdKdCzYHVzQ/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbw3T78oFl0gzsptUZB6SJGzFw_4InOXv84X137Ud0zQw-mCct_WLCC8Ij8JlB723c2XQw/exec";
     
     // 設定重新整理的冷卻時間 (毫秒)，例如 15 秒
     const REFRESH_COOLDOWN = 15000; 
@@ -264,6 +265,7 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
             const data = await res.json();
 
             if (data && data.length > 0) {
+		celebrate();
                 resDiv.innerHTML = data.map(item => `
                     <div class="win-msg">
                         恭喜 ${item.name}！<br>
@@ -291,6 +293,42 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
             }
         }, 1000);
     }
+
+function celebrate() {
+    // 第一波：中心噴發
+    confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        zIndex: 9999
+    });
+
+    // 第二波：兩側連擊 (延遲一點點點)
+    setTimeout(() => {
+        var duration = 3 * 1000;
+        var animationEnd = Date.now() + duration;
+        var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+        function randomInRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        var interval = setInterval(function() {
+            var timeLeft = animationEnd - Date.now();
+            if (timeLeft <= 0) return clearInterval(interval);
+
+            var particleCount = 50 * (timeLeft / duration);
+            confetti(Object.assign({}, defaults, { 
+                particleCount, 
+                origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } 
+            }));
+            confetti(Object.assign({}, defaults, { 
+                particleCount, 
+                origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } 
+            }));
+        }, 250);
+    }, 200);
+}
 </script>
 
 </body>
