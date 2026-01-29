@@ -222,7 +222,16 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
             return;
         }
 
-        grid.innerHTML = prizesFromCloud.map(p => {
+        // --- 新增排序邏輯 ---
+        // 將獎項排序：未完成的在前，已完成(current >= total)的在後
+        const sortedPrizes = [...prizesFromCloud].sort((a, b) => {
+            const aDone = a.current >= a.total ? 1 : 0;
+            const bDone = b.current >= b.total ? 1 : 0;
+            return aDone - bDone; 
+            // 如果 a 完了(1) b 沒完(0)，結果為正數，a 會往後排
+        });
+
+        grid.innerHTML = sortedPrizes.map(p => {
             let statusClass = "";
             let progressText = "";
             
